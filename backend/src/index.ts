@@ -1,14 +1,31 @@
-import { middleware } from "#middlewares/middleware.js";
+import { middleware } from "#@middlewares/middleware.js";
+import { Env } from "#@models/env.js";
+import { PrismaClient } from "#prisma/client.js";
 import express from "express";
-import { Sequelize } from "sequelize";
 
-export const sequelize = new Sequelize("sqlite::memory:");
+export let env: Env;
+export let app = express();
 
-export const app = express();
-const port = process.env.PORT ?? "8080";
+export const prisma = new PrismaClient();
 
-app.get("/", middleware);
+// ... you will write your Prisma Client queries here
+try {
+  const allUsers = await prisma.user.findMany();
+  console.log(allUsers);
+  //Initialize env object
+  env = Env.parse(process.env);
+  //Initialize sequelize
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+  app = express();
+
+  const port = process.env.PORT ?? "8080";
+
+  app.get("/", middleware);
+
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+} catch (e) {
+  console.error("Error during initialization:", e);
+  process.exit();
+}
